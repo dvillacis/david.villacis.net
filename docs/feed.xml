@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="http://david.villacis.net/feed.xml" rel="self" type="application/atom+xml" /><link href="http://david.villacis.net/" rel="alternate" type="text/html" /><updated>2021-02-13T18:33:20-05:00</updated><id>http://david.villacis.net/feed.xml</id><title type="html">David Villacis</title><entry><title type="html">Solving the ROF Denoising Model using Chambolle-Pock</title><link href="http://david.villacis.net/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising/" rel="alternate" type="text/html" title="Solving the ROF Denoising Model using Chambolle-Pock" /><published>2018-12-14T00:00:00-05:00</published><updated>2018-12-14T00:00:00-05:00</updated><id>http://david.villacis.net/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising</id><content type="html" xml:base="http://david.villacis.net/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising/">&lt;p&gt;Let us recall the variational model used for image denoising proposed by Rudin, Osher and Fatemi (ROF)&lt;/p&gt;
+
+\[\max_x \frac{1}{2}\|x-f\|^2+\alpha\|\mathbb{K}x\|_{2,1},\]
+
+&lt;p&gt;where \(f\in\mathbb{R}^n\) is the noise contaminated image, \(\mathbb{K}\in\mathbb{R}^{n\times m}\) the discrete gradient operator and \(\|\cdot\|_{2,1}\) is the anisotropic Total Variation (TV) seminorm.&lt;/p&gt;
+
+&lt;p&gt;This model as presented is very challenging to solve, mainly due to the nonsmoothnes of the total variation seminorm. In &lt;a href=&quot;https://david.villacis.net/blog/2017/02/01/rof-denoising-dual-formulation/&quot;&gt;this previous blog post&lt;/a&gt; we used a fenchel dual formulation to solve it by using a projected gradient descent algorithm as described &lt;a href=&quot;https://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/&quot;&gt;here&lt;/a&gt;. Now, our goal is to improve this results by relying in a &lt;em&gt;Saddle Point Formulation&lt;/em&gt;. Indeed, such formulation involves primal and dual variables, rougly speaking it removes the complexity nonsmooth term (TV) by relying on its dual formulation while leaving the smooth part untouched.&lt;/p&gt;
+
+&lt;p&gt;Particularly, the Rudin-Osher-Fatemi (ROF) Model can be solved using a saddle point formulation which can be written as:&lt;/p&gt;
+
+\[\min_x \max_y g(x) + \langle \mathbb{K} x,y\rangle - f^*(y)\]
+
+\[\min_x \max_y \frac{1}{2}\|x-f\|_2^2 + \langle \mathbb{K} x,y\rangle - \delta_{B_\alpha}(y)\]
+
+&lt;p&gt;This separation allows us to use a primal-dual numerical approach to solve this problem. On order to do so, this method relies on the calculation of the proximal operators of the previously presented functions.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-proximal-operator&quot;&gt;The Proximal Operator&lt;/h2&gt;
+&lt;p&gt;The proximal operator is a key piece when dealing with non-differentiable functions. It consists on modifying the original function with a Moreau-Yosida regularization:&lt;/p&gt;
+
+\[\hat{f}(x) = f(x)+\frac{1}{2\tau}\|\bar{x}-x\|_2^2\]
+
+&lt;p&gt;This regularization makes the original function to be strictly convex, which implies that it has a unique minimizer (this is not the case for convex functions). Indeed, this minimizer is known as the &lt;em&gt;proximal&lt;/em&gt; of the function \(f\):&lt;/p&gt;
+
+\[prox_{\tau\partial f}(x) = arg\min_{\bar{x}} f(x) + \frac{1}{2\tau}\|\bar{x}-x\|_2^2\]
+
+&lt;p&gt;Eventhough this equation shows a formula for calculating this proximal operator, we have to solve an optimization problem to find it. Therefore, this formulation is useful when the solution of this problem has a closed form that is easy to implement and can be done offline.&lt;/p&gt;
+
+&lt;h2 id=&quot;chambolle-pock-method&quot;&gt;Chambolle-Pock Method&lt;/h2&gt;
+&lt;p&gt;This is a first order method, it means that it only uses information for the first derivative of the objective function. Both proximal operators for the smooth and nonsmooth parts are easy to calculate and implement.&lt;/p&gt;
+
+&lt;p&gt;This method defines the following iterative scheme:&lt;/p&gt;
+
+\[x_{k+1} = prox_{\tau \partial g}(x_k-\tau\mathbb{K}^\top y_k)\]
+
+\[\bar{x}_{k+1} = 2x_{k+1} - x_k\]
+
+\[y_{k+1} = prox_{\sigma \partial f^*}(y_k+\sigma \mathbb{K}\bar{x}_{k+1})\]
+
+&lt;p&gt;Therefore, for our specific case we need to calculate both the proximal of \(g\) and \(f^*\):&lt;/p&gt;
+
+&lt;h4 id=&quot;proximal-gx--frac12x-f_22&quot;&gt;Proximal \(g(x) = \frac{1}{2}\|x-f\|_2^2\)&lt;/h4&gt;
+&lt;p&gt;In this calculation we will use as described in the definition, a Moreau-Yosida regularization of \(g\):&lt;/p&gt;
+
+\[prox_{\tau\partial g}(x) = arg\min_{\bar x} \frac{1}{2}\|\bar{x}-f\|_2^2 + \frac{1}{2\tau}\|\bar{x}-x\|_2^2\]
+
+&lt;p&gt;The necessary and sufficient condition for the optimal value \(\bar{x}\) is:&lt;/p&gt;
+
+\[(\bar{x}-f)+\frac{1}{\tau}(\bar{x}-x) = 0\]
+
+\[x = \tau(\bar{x}-f) + \bar{x}\]
+
+\[x = (\tau+1)\bar{x}-\tau f\]
+
+\[\bar{x} = \frac{x+\tau f}{\tau+1}\]
+
+&lt;p&gt;Which yields:&lt;/p&gt;
+
+\[prox_{\tau\partial g}(x) = \frac{x_k + \tau(f-\mathbb{K}^\top y_k)}{\tau +1}\]
+
+&lt;h4 id=&quot;proximal-fy--delta_b_alphay&quot;&gt;Proximal \(f^*(y) = \delta_{B_\alpha}(y)\)&lt;/h4&gt;
+
+\[prox_{\sigma\partial f^*}(y) = arg\min_{\bar{y}} \delta_{B_\alpha}(\bar{y}) + \frac{1}{2\sigma}\|\bar{y}-y\|_2^2\]
+
+&lt;p&gt;As can be seen this leads to a new optimization problem, this problem can be solved by analyzing the first order optimality condition of this problem:&lt;/p&gt;
+
+\[0 \in \partial \delta_{B_\alpha}(\bar{y}) + (\bar{y}-y)\]
+
+&lt;p&gt;Where \(\partial \delta_{B_\alpha}(y)\) is the convex subdifferendial of the indicator function of the \(\lambda\)-ball. Which can be characterized by the piwelwise orthogonal projection onto an \(l_2\) ball of radius \(\alpha\), and can be easily computed using this formula&lt;/p&gt;
+
+\[\tilde{y}_j = \frac{y_j}{\max(1,\alpha^{-1}\|y\|)},\;\forall j=1,\dots,n\]
+
+&lt;h3 id=&quot;stopping-criteria&quot;&gt;Stopping Criteria&lt;/h3&gt;
+&lt;p&gt;As usual with these primal-dual methos, it is customary to use a measure for convergence. In this case it corresponds to the primal-dual gap&lt;/p&gt;
+
+\[PD(x,y) = f(\mathbb{K}x)+g(x)+f^*(y)+g^*(-\mathbb{K}^*y)\]
+
+&lt;p&gt;where \(g^*\) is the classical fenchel conjugate of \(g\) which we previously reviewed.&lt;/p&gt;
+
+&lt;h2 id=&quot;matlab-code&quot;&gt;MATLAB Code&lt;/h2&gt;
+&lt;p&gt;A working implementation can be found in our newly created repository &lt;a href=&quot;https://github.com/dvillacis/bilevel_toolbox&quot;&gt;Bilevel Toolbox&lt;/a&gt;. The main part of the method has the following form&lt;/p&gt;
+
+&lt;div class=&quot;language-matlab highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;solve_rof_cp_single_gaussian&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;% Start the counter&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;t1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;tic&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(:);&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gradient_matrix&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;zeros&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;sol_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;L&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;tau&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.01&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;sigma&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tau&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[];&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;% Auxiliary terms&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;/(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tau&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;alpha&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;maxiter&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;% Dual step calculation&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sigma&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sol_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;bsxfun&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;rdivide&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;max&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rssq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;%Primal Step calculation&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;sol_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tau&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&apos;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tau&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;% Overrelaxation step&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;sol_&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sol_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;ga&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compute_rof_pd_gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;alpha&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ga&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;];&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;mod&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;check&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;verbose&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+      &lt;span class=&quot;nb&quot;&gt;fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;rof_cp: iter = %4d, gap = %f\n&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ga&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ga&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tol&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;break&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sol&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;% Print summary&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;param&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;verbose&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;\n &apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;ROF_CHAMBOLLE_POCK&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;:\n&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos; %i iterations\n&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;k&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos; Primal-Dual Gap: %f \n&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+    &lt;span class=&quot;nb&quot;&gt;fprintf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos; Execution Time: %f \n\n&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;toc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;As for the primal dual gap it can be implemented by calculating the primal and dual values as follows&lt;/p&gt;
+
+&lt;div class=&quot;language-matlab highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;primal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compute_rof_pd_gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;div_p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&apos;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;nabla_u&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nabla&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;nu&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;reshape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nabla_u&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;M&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;N&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.^&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;primal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lambda&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nu&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;norm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;u&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;dual&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;norm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;div_p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;^&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&apos;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;div_p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+  &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;primal&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;dual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;numerical-experiment&quot;&gt;Numerical Experiment&lt;/h2&gt;
+&lt;p&gt;We can see that this method converges much faster than the dual version presented in a previous post. Furthermore, as we can calculate the projection operator pixelwise, it is possible to take advantage of parallel computing, in particular GPU computing to make this operation very efficient. A recent effort in implementing this can be read in the following &lt;a href=&quot;https://lajc.epn.edu.ec/index.php/LAJC/article/view/133&quot;&gt;paper&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We can see the algorithm indeed denoises the image as expected&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/chambolle_pock_denoising/cp_playing_cards.png&quot; alt=&quot;cp_playing_cards&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And we can see a decrease in the primal dual gap, confirming it is indeed converging to a solution.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/chambolle_pock_denoising/cp_gap.png&quot; alt=&quot;cp_gap&quot; /&gt;&lt;/p&gt;</content><author><name></name></author><category term="chambolle" /><category term="pock" /><category term="backward" /><category term="rudin" /><category term="osher" /><category term="fatemi" /><category term="rof" /><category term="fenchel" /><category term="saddle" /><category term="point" /><category term="optimization" /><category term="matlab" /><summary type="html">Let us recall the variational model used for image denoising proposed by Rudin, Osher and Fatemi (ROF)</summary></entry><entry><title type="html">Solving the Dual ROF Denoising Model using Projected Gradient Descent</title><link href="http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/" rel="alternate" type="text/html" title="Solving the Dual ROF Denoising Model using Projected Gradient Descent" /><published>2017-04-06T00:00:00-05:00</published><updated>2017-04-06T00:00:00-05:00</updated><id>http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent</id><content type="html" xml:base="http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">&lt;p&gt;In this blog post we will continue talking about the Image Denoise problem described in my &lt;a href=&quot;https://david.villacis.net/blog/2017/02/01/rof-denoising-dual-formulation/&quot;&gt;previous post&lt;/a&gt;. In this post we described a dual formulation for the ROF Image Denoise model.&lt;/p&gt;
+
+&lt;p&gt;We can see that in this particular case the problem becomes easier to tackle, given that there are no non-differentiable terms. Now we have to find ways to solve this dual problem numerically, with this goal in mind we will propose a first approach using a gradient descent algorithm. If you are unfamiliar with this optimization techniques you can refer to this &lt;a href=&quot;https://link.springer.com/book/10.1007%2Fb106451&quot;&gt;book&lt;/a&gt;, wich provides a comprenhensive foundation.&lt;/p&gt;
+
+&lt;p&gt;The main idea behind gradient based methods is to define an iterative scheme for solving an optimization problem in which an objective function decreses its value when its variable changes in the direction of the gradient of such function. In the case of the ROF model we can estimate its value at each iteration&lt;/p&gt;
+
+\[ROF(u) = \frac{1}{2}\| u-f \|_2^2 + \lambda \| \mathbb{K}u \|_{2,1}\]
+
+&lt;p&gt;This value can be used to give a bound on the \(l_2\) error \(\frac{1}{2} \|u - u^* \|\). We will be implementing this gap using a the following python function:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ROF_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;sa&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot; Compute the ROF cost functional
+
+    Parameters
+    ----------
+    f : numpy array
+        Noisy input image
+    x : numpy array
+        Primal variable value
+    y : numpy array
+        Dual variable value
+    clambda : float
+        Tickonov regularization parameter
+    &quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;linalg&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;norm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flatten&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;b&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;axis&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)).&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flatten&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;b&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Recalling a version of the dual formulation presented in the previous post, we know that the dual form of the ROF model is:&lt;/p&gt;
+
+\[\min \left\{ \frac{1}{2} \|\mathbb{K}^* p\|_2^2 - \langle \mathbb{K}^* p, f \rangle : \sqrt{p_j^2 + p_{m+j}^2} \le \lambda \; \forall j = 1,\dots,m\right\}\]
+
+&lt;p&gt;If we look closely we can define a simpler form of this optimization problem by implementing a projection operator into the unit \(\mathbb{R}^n\) ball:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;prox_project&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;sa&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot; Projection to the clambda-ball
+
+    Parameters
+    ----------
+    clambda : float
+        Radius of the ball
+    z : numpy array
+        data to be projected
+
+    &quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;nrm&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sqrt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fact&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minimum&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nrm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fact&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;divide&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nrm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;out&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zeros_like&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nrm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zeros&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;multiply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;multiply&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;z&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[:,:,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fact&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;leaving the rest of the function differentiable, therefore we can explicity calculate its gradient:&lt;/p&gt;
+
+\[\nabla ROF(u) = \mathbb{K}(\mathbb{K}^* p - f)\]
+
+&lt;p&gt;I will be using a python module that I’m developing called Bilevel Imaging Toolbox &lt;a href=&quot;https://github.com/dvillacis/BilevelImagingToolbox&quot;&gt;(BIToolbox)&lt;/a&gt;, it is still in its early stages, but there you can find an implementation for a projected gradient descent algorithm. The relevant part of the code is detailed:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;projectedGD_ROF&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;iters&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+    &lt;span class=&quot;sa&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot; 2D Dual ROF solver using Projected Gradient Descent Method
+
+    Parameters
+    ----------
+    image : numpy array
+        The noisy image we are processing
+    clambda : float
+        The non-negative weight in the optimization problem
+    iters : int
+        Number of iterations allowed
+
+    &quot;&quot;&quot;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;2D Dual ROF solver using Projected Gradient Descent method&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;n&quot;&gt;start_time&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default_timer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;op&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;operators&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;make_finite_differences_operator&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;fn&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;op&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;vallog&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;np&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zeros&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.1&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#Line search parameter
+&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;alpha&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;op&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;op&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;operators&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;prox_project&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;image&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;op&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;y&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;vallog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ROF_value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;op&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;val&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clambda&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Finished Projected Gradient Descent Dual ROF denoising in %d iterations and %f sec&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;iters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;default_timer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_time&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vallog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In this toolbox there is also a predefined methods for obtaining the discrete gradient matrix &lt;em&gt;nabla&lt;/em&gt; andd adding different kind of noise to images. If we pass this predefined functions to this algorithm, we will get the following results:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/gradient_descent_dual_rof.png&quot; alt=&quot;alt text&quot; title=&quot;ROF Denoised Lena&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;And we can take a look to the ROF cost evolution:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/ROF_cost_evolution_PGD.png&quot; alt=&quot;alt text&quot; title=&quot;ROF Cost Evolution&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Therefore, we can make use of traditional optimization techniques to solve this problem. Although, this method requires the gradient to be Lipschitz continuous, in practice this method doesn’t work for some values of the step size and \(\lambda\). Therefore we will explore other techniques in the next posts. Finally, a couple of words on the descent algorithm itself. In this experiments we are using a fixed step size for the descent step, this type of algorithms are very sensitive to the step length choice. In consequence, if we want to improve the results presented it is important to implement a smarter line search strategy such as &lt;em&gt;Armijo&lt;/em&gt; or &lt;em&gt;Wolfe&lt;/em&gt;. Furthermore, various acceleration mechanisms take into account the variation of this parameter to accelerate convergence.&lt;/p&gt;</content><author><name></name></author><category term="projected" /><category term="gradient" /><category term="rudin" /><category term="osher" /><category term="fatemi" /><category term="rof" /><category term="fenchel" /><category term="dual" /><category term="optimization" /><category term="python" /><category term="numpy" /><category term="scipy" /><category term="coitoolbox" /><summary type="html">In this blog post we will continue talking about the Image Denoise problem described in my previous post. In this post we described a dual formulation for the ROF Image Denoise model.</summary></entry><entry><title type="html">Dual ROF Image Denoising Model Formulation</title><link href="http://david.villacis.net/blog/2017/02/01/rof-denoising-dual-formulation/" rel="alternate" type="text/html" title="Dual ROF Image Denoising Model Formulation" /><published>2017-02-01T00:00:00-05:00</published><updated>2017-02-01T00:00:00-05:00</updated><id>http://david.villacis.net/blog/2017/02/01/rof-denoising-dual-formulation</id><content type="html" xml:base="http://david.villacis.net/blog/2017/02/01/rof-denoising-dual-formulation/">&lt;p&gt;In this post we will review a technique for solving the image denoising problem using the method proposed by Rudin, Osher and Fatemi also known as the ROF denoising model, more details on the model can be found &lt;a href=&quot;http://www.math-info.univ-paris5.fr/~lomn/Cours/ECE/PhysicaRudinOsher.pdf&quot;&gt;here&lt;/a&gt;. In this case we asume that the image is corrupted by gaussian distributed noise, and if we assume the original image is a matrix of size \(n_1 \times n_2\) in what follows we will treat this as a vector \(u \in \mathbb{R}^{n=n_1\times n_2}\). Therefore the ROF primal formulation is as follows:&lt;/p&gt;
+
+\[\min_{u\in \mathbb{R}^n} \frac{1}{2}\| u-f \|_2^2 + \lambda \| \mathbb{K}u \|_{2,1}\]
+
+&lt;p&gt;where \(f \in \mathbb{R}^m\) is the corrupted image, \(\mathbb{K}\) is a linear operator (in this case the gradient), \(\lambda\) is a Tickonov Regularization term and  \(\| . \|_{2,1}\) is the &lt;em&gt;Isotropic Total Variation&lt;/em&gt; seminorm defined as:&lt;/p&gt;
+
+\[\| u \|_{2,1} = \sum_{j=1}^n \sqrt{u_j^2 + u_{n+j}^2}\]
+
+&lt;p&gt;for a vector \(u\in\mathbb{R}^{2n}\).&lt;/p&gt;
+
+&lt;p&gt;Several techniques have used to perform this optimization problem, the main challenge in facing this kind of optimization problems is the treatment of the non-differentiable Total Variation (TV) seminorm. Most of the available literature uses a smoothed version of this norm (Huber, Berkovier-Engelman regularizations) in order to obtain the optimality conditions and to characterize a gradient.&lt;/p&gt;
+
+&lt;p&gt;The approach that we will be taking is to formulate the Fechel ROF Dual problem, with the goal of having a formulation that doesn’t require any smoothing.&lt;/p&gt;
+
+&lt;h2 id=&quot;the-fenchel-dual-formulation&quot;&gt;The Fenchel Dual Formulation&lt;/h2&gt;
+
+&lt;h3 id=&quot;convex-conjugate&quot;&gt;Convex Conjugate&lt;/h3&gt;
+&lt;p&gt;Let’s recall the definition of a convex conjugate: Given a function \(f:\mathbb{R} \to \mathbb{R}\) a general possibly non-convex function, we define the &lt;em&gt;convex conjugate&lt;/em&gt; as:&lt;/p&gt;
+
+\[f^* (p) = sup_{u\in\mathbb{R}^n}(\langle u,p \rangle - f(u))\]
+
+&lt;h3 id=&quot;rof-fechel-dual-formulation&quot;&gt;ROF Fechel Dual Formulation&lt;/h3&gt;
+&lt;p&gt;If we separate the ROF functional in two terms: \(f(\mathbb{K}u) = \| u \|_{2,1}\) and \(g(u) = \frac{1}{2}\| u-f \|_2^2\), we can find the dual formulation of a problem of the type: \(\min_u f(\mathbb{K}u) + g(u)\)&lt;/p&gt;
+
+\[\begin{align}
+ \min_{u\in \mathbb{R}^n} f(\mathbb{K}x) + g(x) &amp;amp;= \min_{u\in \mathbb{R}^n} \sup_{p \in \mathbb{R}^m} \langle p, \mathbb{K}u \rangle - f^* (p)+ g(u)\\
+ &amp;amp;= \max_{p \in \mathbb{R}^m} \inf_u  \langle p, \mathbb{K}u \rangle - f^* (p) + g(u)\\
+ &amp;amp;= \max_{p \in \mathbb{R}^m} -f^* (p) - g^* (\mathbb{K}^* p)\\
+ &amp;amp;= \min_{p \in \mathbb{R}^m} f^* (p) + g^* (-\mathbb{K}^* p)
+ \end{align}\]
+
+&lt;h4 id=&quot;dual-of-the-function-gu--frac12u-f_22&quot;&gt;Dual of the function \(g(u) = \frac{1}{2}\|u-f\|_2^2\)&lt;/h4&gt;
+
+&lt;p&gt;For this function we will apply the definition of the fenchel dual:&lt;/p&gt;
+
+\[\begin{align}
+  g(u) &amp;amp;= \frac{1}{2}\|u-f\|_2^2\\
+  g^*(p) &amp;amp;= \sup_u \left\{\langle p,u \rangle - \frac{1}{2}\|u-f\|_2^2 \right\}\\
+  \end{align}\]
+
+&lt;p&gt;In order to find the supremum of such argument we find its critical point:&lt;/p&gt;
+
+\[\begin{align}
+  \partial_u \left( \langle p,u \rangle - \frac{1}{2} \|u-f\|_2^2 \right) &amp;amp;= 0\\
+  p -(u-f) &amp;amp;= 0\\
+  \end{align}\]
+
+&lt;p&gt;From this optimality condition we can define the optimal point characterized as:&lt;/p&gt;
+
+\[\begin{align}
+  p &amp;amp;= u-f\\
+  u &amp;amp;= p + f
+  \end{align}\]
+
+&lt;p&gt;This point can be used as the point where the function reaches a maximum, then we can describe the dual funtion \(g^*\) as:&lt;/p&gt;
+
+\[\begin{align}
+  g^* (p) &amp;amp;= \langle p, p+f \rangle - \frac{1}{2} \|p+f-f\|_2^2,\\
+  g^* (p)&amp;amp;= \langle p,p \rangle + \langle p,f \rangle - \frac{1}{2}\|p\|_2^2\\
+  g^* (p)&amp;amp;= \frac{1}{2}\|p\|_2^2 + \langle p,f \rangle
+  \end{align}\]
+
+&lt;h4 id=&quot;dual-of-the-function-fu--lambda--u-_21&quot;&gt;Dual of the function \(f(u) = \lambda \| u \|_{2,1}\)&lt;/h4&gt;
+
+&lt;p&gt;Applying the convex conjugate definition, we can see that \(f^* (p)\) is the indicator function of the pointwise two-dimensional unit ball, given that \(p\in\mathbb{R}^{2m}\):&lt;/p&gt;
+
+\[f^* (p) =
+\begin{cases}
+0,\; \max_{j=1,\dots,m} \sqrt{p_j^2 + p_{m+j}^2} \le \lambda,\\
+\infty, \; \text{otherwise}
+\end{cases}\]
+
+&lt;h4 id=&quot;placing-it-all-together&quot;&gt;Placing it all together&lt;/h4&gt;
+
+&lt;p&gt;Now we will use the dual functions calculated previously to get a representation of the &lt;em&gt;Dual ROF Model&lt;/em&gt;, from the Fechel-Rockafellar duality we know that:&lt;/p&gt;
+
+\[\begin{align}
+  \min_{p \in \mathbb{R}^m}&amp;amp; f^* (p) + g^* (-\mathbb{K}^* p)\\
+  \min_{p \in \mathbb{R}^m}&amp;amp; f^* (p) + \frac{1}{2} \|\mathbb{K}^* p\|_2^2 - \langle \mathbb{K}^* p, f \rangle\\
+  \min&amp;amp; \left\{ \frac{1}{2} \|\mathbb{K}^* p\|_2^2 - \langle \mathbb{K}^* p, f \rangle : \sqrt{p_j^2 + p_{m+j}^2} \le \lambda \; \forall j = 1,\dots,m\right\}
+  \end{align}\]</content><author><name></name></author><category term="Rudin" /><category term="Osher" /><category term="Fatemi" /><category term="dual" /><category term="denoising" /><category term="variational" /><category term="models" /><category term="fista" /><category term="forward" /><category term="backward" /><summary type="html">In this post we will review a technique for solving the image denoising problem using the method proposed by Rudin, Osher and Fatemi also known as the ROF denoising model, more details on the model can be found here. In this case we asume that the image is corrupted by gaussian distributed noise, and if we assume the original image is a matrix of size \(n_1 \times n_2\) in what follows we will treat this as a vector \(u \in \mathbb{R}^{n=n_1\times n_2}\). Therefore the ROF primal formulation is as follows:</summary></entry><entry><title type="html">Grayscale Calibration of High Resolution Images</title><link href="http://david.villacis.net/blog/2017/01/25/grayscale-calibration-of-high-resolution-images/" rel="alternate" type="text/html" title="Grayscale Calibration of High Resolution Images" /><published>2017-01-25T00:00:00-05:00</published><updated>2017-01-25T00:00:00-05:00</updated><id>http://david.villacis.net/blog/2017/01/25/grayscale-calibration-of-high-resolution-images</id><content type="html" xml:base="http://david.villacis.net/blog/2017/01/25/grayscale-calibration-of-high-resolution-images/">&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;In this post I will describe in detail, the steps taken for building the Playing Cards Photographic Dataset that can be downloaded in this &lt;a href=&quot;http://www.fips.fi/photographic_dataset.php&quot;&gt;link&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This dataset was build to provide researchers in the Image Processing and Inverse Problems communities a set of high resolution images corrupted with real noise. Traditionally denoising models have been tested against synthetic noise created with a known distribution which in my opinion can bias the performance of certain models. We chose lpaying cards given the fact that the strong discontinuities in the colors can be ideal for testing Total Variation related models, which will be described in later posts.&lt;/p&gt;
+
+&lt;p&gt;This dataset was built at the Industrial Mathematics Laboratory of the Department of Mathematics and Statistics of the University of Helsinki in colaboration with the Center of Mathematical Modelling (MODEMAT) at Escuela Politécnica Nacional in Quito, Ecuador.&lt;/p&gt;
+
+&lt;h3 id=&quot;camera-equipment&quot;&gt;Camera Equipment&lt;/h3&gt;
+&lt;p&gt;We used a PhaseOne XF medium-format camera equipped with an achromatic IQ260 digital block. The lens is Phase One Digital AF 120mm F4. The pixel size in the resulting 16bit TIFF image is 8964 x 6716.&lt;/p&gt;
+
+&lt;h3 id=&quot;lighting&quot;&gt;Lighting&lt;/h3&gt;
+&lt;p&gt;The targets were lit with ve Olight X6 Marauder LED flashlights with luminous flux of 5000 lm. The lights were positioned at roughly equiangular arrangement. The distance of each light from the target was roughly 850 mm.
+The lights were heating up quickly as they were used at maximum power. Cooling was enhanced with three regular household fans. A diuser was placed between the lights and the target to make the lighting more uniform and to reduce sharp shadows.&lt;/p&gt;
+
+&lt;h3 id=&quot;details-of-target&quot;&gt;Details of target&lt;/h3&gt;
+&lt;p&gt;We placed playing cards on a horizontal surface. The camera was aimed directly down, so the optical axis was roughly vertical. In every picture there is a five-step grayscale target for calibration.&lt;/p&gt;
+
+&lt;h3 id=&quot;varying-the-noise-level-in-the-data&quot;&gt;Varying the noise level in the data&lt;/h3&gt;
+&lt;p&gt;For each arrangement of cards, four different images were taken:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Best-quality photo (im clean.tif). Minimum ISO setting 200 and histogram approximately spanning the full dynamic range. The noise level is very small.&lt;/li&gt;
+  &lt;li&gt;Medium-quality photo, rst type (im noise1.tif). Minimum ISO setting 200 and histogram approximately spanning a quarter the full dynamic range. This will introduce round-o errors from the AD converter.&lt;/li&gt;
+  &lt;li&gt;Medium-quality photo, second type (im noise2.tif). Maximum ISO setting 3200 and histogram approximately spanning the full dynamic range. This will introduce photon-counting noise as well as some electronic noise.&lt;/li&gt;
+  &lt;li&gt;Low-quality photo (im noise3.tif). Maximum ISO setting 3200 and histogram approximately spanning a quarter of the full dynamic range. The noise will be increased by added round-off errors.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div id=&quot;portfolio&quot; class=&quot;portfolio grid-container clearfix&quot;&gt;
+
+						&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+							&lt;div class=&quot;portfolio-image&quot;&gt;
+								&lt;a href=&quot;portfolio-single.html&quot;&gt;
+									&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/im_clean.png&quot; alt=&quot;Clean Image&quot; /&gt;
+								&lt;/a&gt;
+							&lt;/div&gt;
+							&lt;div class=&quot;portfolio-desc&quot;&gt;
+								&lt;h3&gt;&lt;a&gt;Clean Image&lt;/a&gt;&lt;/h3&gt;
+							&lt;/div&gt;
+						&lt;/article&gt;
+
+						&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+							&lt;div class=&quot;portfolio-image&quot;&gt;
+								&lt;a&gt;
+									&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/im_noise1.png&quot; alt=&quot;Noise Type 1&quot; /&gt;
+								&lt;/a&gt;
+							&lt;/div&gt;
+							&lt;div class=&quot;portfolio-desc&quot;&gt;
+								&lt;h3&gt;&lt;a&gt;Noise Type 1&lt;/a&gt;&lt;/h3&gt;
+							&lt;/div&gt;
+						&lt;/article&gt;
+
+						&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+							&lt;div class=&quot;portfolio-image&quot;&gt;
+								&lt;a&gt;
+									&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/im_noise2.png&quot; alt=&quot;Noise Type 2&quot; /&gt;
+								&lt;/a&gt;
+							&lt;/div&gt;
+							&lt;div class=&quot;portfolio-desc&quot;&gt;
+								&lt;h3&gt;&lt;a&gt;Noise Type 2&lt;/a&gt;&lt;/h3&gt;
+							&lt;/div&gt;
+						&lt;/article&gt;
+
+						&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+							&lt;div class=&quot;portfolio-image&quot;&gt;
+								&lt;a&gt;
+									&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/im_noise3.png&quot; alt=&quot;Noise Type 3&quot; /&gt;
+								&lt;/a&gt;
+							&lt;/div&gt;
+							&lt;div class=&quot;portfolio-desc&quot;&gt;
+								&lt;h3&gt;&lt;a&gt;Noise Type 3&lt;/a&gt;&lt;/h3&gt;
+							&lt;/div&gt;
+						&lt;/article&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;intensity-calibration-process&quot;&gt;Intensity Calibration Process&lt;/h2&gt;
+&lt;p&gt;As it can be seen in the previous Figure, we had 4 different images with different intensity values, the goal of the calibration process is to generate a new set of images based that span the complete dynamic range and preserves all the non-linear properties presented during the aquisition process. The entire process can be summarized as follows:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;em&gt;Linear Intensity Adjustment&lt;/em&gt;: We perform a linear adjustment so that all the images span all the dynamic range.&lt;/li&gt;
+  &lt;li&gt;&lt;em&gt;Grayscale Non Linear Calibration&lt;/em&gt;: This process uses the 5-level grayscale phantoms included in the image to include the nonlinearity generated during the aquisition process.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;linear-intensity-adjustment&quot;&gt;Linear Intensity Adjustment&lt;/h3&gt;
+&lt;p&gt;This process takes all of the 4 images, drops 1% of the highest and lowest values presented in the histogram, and linearly expands the histogram so it covers the full dynamic range \([0-65535]\).&lt;/p&gt;
+
+&lt;pre class=&quot;matlab-code&quot;&gt;
+%% Linear adjustment to make the image span all the dynamic range
+function [ adjusted_image ] = image_adjust_linear( img, lowIn, highIn, lowOut, highOut )
+  adjusted_image = (img &amp;lt; lowIn) .* lowOut;
+  adjusted_image = adjusted_image + (img &amp;gt;= lowIn &amp;amp; img &amp;lt; highIn) .* ...
+      (lowOut + (highOut - lowOut) .* ((img-lowIn)/(highIn - lowIn)));
+  adjusted_image = adjusted_image + (img &amp;gt;= highIn).* highOut;
+&lt;/pre&gt;
+
+&lt;h3 id=&quot;grayscale-non-linear-calibration&quot;&gt;Grayscale Non-linear Calibration&lt;/h3&gt;
+&lt;p&gt;In this step we take the information extracted from the 5-level grayscale phantom provided within the image to set a vector containing the corresponding intensity for each level.&lt;/p&gt;
+
+&lt;pre class=&quot;matlab-code&quot;&gt;
+%% Averaging the grayleves in each patch
+grayLevels = [round(mean(patch1(:))),round(mean(patch2(:))),...
+    round(mean(patch3(:))),round(mean(patch4(:))),round(mean(patch5(:)))];
+&lt;/pre&gt;
+
+&lt;p&gt;Using these levels from the corrupted image and from the clean image, we perform a spline interpolation in such a way that the non-linearities presenten in the clean image are preserved during the calibration process.&lt;/p&gt;
+
+&lt;pre class=&quot;matlab-code&quot;&gt;
+%% Spline correlation between the source and target grayscale
+function [ adjusted_image ] = image_adjust_spline( img, grayLevels_src, grayLevels_ref )
+    xx = 0:1:2^16;
+    yy = spline(grayLevels_src,grayLevels_ref,xx);
+    adjusted_image = round(yy(round(img+1)));
+end
+&lt;/pre&gt;
+
+&lt;p&gt;This way we end up with the following calibrated images:&lt;/p&gt;
+
+&lt;div id=&quot;portfolio&quot; class=&quot;portfolio grid-container clearfix&quot;&gt;
+	&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+		&lt;div class=&quot;portfolio-image&quot;&gt;
+			&lt;a href=&quot;portfolio-single.html&quot;&gt;
+				&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/corrected_im_clean.png&quot; alt=&quot;Clean Image&quot; /&gt;
+			&lt;/a&gt;
+		&lt;/div&gt;
+		&lt;div class=&quot;portfolio-desc&quot;&gt;
+			&lt;h3&gt;&lt;a&gt;Clean Image&lt;/a&gt;&lt;/h3&gt;
+		&lt;/div&gt;
+	&lt;/article&gt;
+
+	&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+		&lt;div class=&quot;portfolio-image&quot;&gt;
+			&lt;a&gt;
+				&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/corrected_im_noise1.png&quot; alt=&quot;Noise Type 1&quot; /&gt;
+			&lt;/a&gt;
+		&lt;/div&gt;
+		&lt;div class=&quot;portfolio-desc&quot;&gt;
+			&lt;h3&gt;&lt;a&gt;Noise Type 1&lt;/a&gt;&lt;/h3&gt;
+		&lt;/div&gt;
+	&lt;/article&gt;
+
+	&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+		&lt;div class=&quot;portfolio-image&quot;&gt;
+			&lt;a&gt;
+				&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/corrected_im_noise2.png&quot; alt=&quot;Noise Type 2&quot; /&gt;
+			&lt;/a&gt;
+		&lt;/div&gt;
+		&lt;div class=&quot;portfolio-desc&quot;&gt;
+			&lt;h3&gt;&lt;a&gt;Noise Type 2&lt;/a&gt;&lt;/h3&gt;
+		&lt;/div&gt;
+	&lt;/article&gt;
+
+	&lt;article class=&quot;portfolio-item pf-media pf-icons&quot;&gt;
+		&lt;div class=&quot;portfolio-image&quot;&gt;
+			&lt;a&gt;
+				&lt;img src=&quot;https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/grayscale_calibration/corrected_im_noise3.png&quot; alt=&quot;Noise Type 3&quot; /&gt;
+			&lt;/a&gt;
+		&lt;/div&gt;
+		&lt;div class=&quot;portfolio-desc&quot;&gt;
+			&lt;h3&gt;&lt;a&gt;Noise Type 3&lt;/a&gt;&lt;/h3&gt;
+		&lt;/div&gt;
+	&lt;/article&gt;
+&lt;/div&gt;</content><author><name></name></author><category term="high" /><category term="resolution" /><category term="grayscale" /><category term="intensity" /><category term="calibration" /><summary type="html">Introduction In this post I will describe in detail, the steps taken for building the Playing Cards Photographic Dataset that can be downloaded in this link.</summary></entry></feed>

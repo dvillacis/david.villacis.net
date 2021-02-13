@@ -1,0 +1,683 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en-US">
+	<head>
+
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Solving the Dual ROF Denoising Model using Projected Gradient Descent | David Villacis</title>
+<meta name="generator" content="Jekyll v4.2.0" />
+<meta property="og:title" content="Solving the Dual ROF Denoising Model using Projected Gradient Descent" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="In this blog post we will continue talking about the Image Denoise problem described in my previous post. In this post we described a dual formulation for the ROF Image Denoise model." />
+<meta property="og:description" content="In this blog post we will continue talking about the Image Denoise problem described in my previous post. In this post we described a dual formulation for the ROF Image Denoise model." />
+<link rel="canonical" href="http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/" />
+<meta property="og:url" content="http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/" />
+<meta property="og:site_name" content="David Villacis" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-04-06T00:00:00-05:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Solving the Dual ROF Denoising Model using Projected Gradient Descent" />
+<script type="application/ld+json">
+{"description":"In this blog post we will continue talking about the Image Denoise problem described in my previous post. In this post we described a dual formulation for the ROF Image Denoise model.","headline":"Solving the Dual ROF Denoising Model using Projected Gradient Descent","dateModified":"2017-04-06T00:00:00-05:00","datePublished":"2017-04-06T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/"},"url":"http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/","@type":"BlogPosting","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+	<meta name="author" content="David Villacis" />
+  <meta name="description" content=""
+
+	<!-- Stylesheets
+	============================================= -->
+	<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400,400italic,600,700|Raleway:300,400,500,600,700|Crete+Round:400italic" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
+	<link rel="stylesheet" href="/css/style.css" type="text/css" />
+	<link rel="stylesheet" href="/css/swiper.css" type="text/css" />
+	<link rel="stylesheet" href="/css/dark.css" type="text/css" />
+	<link rel="stylesheet" href="/css/font-icons.css" type="text/css" />
+	<link rel="stylesheet" href="/css/animate.css" type="text/css" />
+	<link rel="stylesheet" href="/css/magnific-popup.css" type="text/css" />
+	<link rel="stylesheet" href="/css/syntax.css" type="text/css" />
+
+	<link rel="stylesheet" href="/css/responsive.css" type="text/css" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+	<!-- Document Title
+	============================================= -->
+	<title>Solving the Dual ROF Denoising Model using Projected Gradient Descent</title>
+
+	<link type="application/atom+xml" rel="alternate" href="http://david.villacis.net/feed.xml" title="David Villacis" />
+	<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-68031487-2', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+	<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<script>
+  (adsbygoogle = window.adsbygoogle || []).push({
+    google_ad_client: "ca-pub-7181720568368396",
+    enable_page_level_ads: true
+  });
+</script>
+
+
+	<script type="text/javascript" async
+	  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML">
+	</script>
+
+</head>
+
+	<body class="stretched" data-loader="6" data-animation-in="fadeIn">
+
+		<!-- Wrapper -->
+			<div id="wrapper" class="clearfix">
+
+				<!-- Header
+============================================= -->
+<header id="header" class="sticky-style-2">
+
+  <div class="container clearfix">
+
+    <!-- Logo
+    ============================================= -->
+    <div id="logo" class="divcenter">
+      <!-- <a href="/"><div class="divcenter">HOLA</div></a> -->
+      <a href="/" class="standard-logo" data-dark-logo="/images/logo-dark.png"><img class="divcenter" src="/images/logo.png" alt="David Villacis"></a>
+      <a href="/" class="retina-logo" data-dark-logo="/images/logo-dark.png"><img class="divcenter" src="/images/logo.png" alt="David Villacis"></a>
+    </div><!-- #logo end -->
+
+  </div>
+
+  <div id="header-wrap">
+
+    <!-- Primary Navigation
+    ============================================= -->
+    <nav id="primary-menu" class="style-2 center">
+
+      <div class="container clearfix">
+
+        <div id="primary-menu-trigger"><i class="icon-reorder"></i></div>
+
+        <ul>
+          
+            <li><a href="/"><div>Home</div></a></li>
+          
+          
+            <li><a href="/bio"><div>Bio</div></a></li>
+          
+          
+            <li><a href="/research"><div>Research</div></a></li>
+          
+          
+            <li><a href="/code"><div>Code</div></a></li>
+          
+          
+            <li><a href="/teaching"><div>Teaching</div></a></li>
+          
+          
+            <li class="current"><a href="/blog"><div>Blog</div></a></li>
+          
+          <!-- 
+            <li><a href="/photo_blog"><div>Photo Blog</div></a></li>
+           -->
+          
+            <li><a href="/contact"><div>Contact</div></a></li>
+          
+        </ul>
+
+        <!-- Top Search
+        ============================================= -->
+        <div id="top-search">
+          <a href="#" id="top-search-trigger"><i class="icon-search3"></i><i class="icon-line-cross"></i></a>
+          <form>
+            <input type="text" name="q" class="form-control super-search__input" id="js-super-search__input" value="" placeholder="Type &amp; Hit Enter..">
+            <ul class="super-search__results" id="js-super-search__results"></ul>
+          </form>
+        </div><!-- #top-search end -->
+
+      </div>
+
+    </nav><!-- #primary-menu end -->
+
+  </div>
+
+</header><!-- #header end -->
+
+
+				<!-- Content -->
+        <section id="content">
+	<div class="content-wrap">
+    <div class="container clearfix">
+			<div class="postcontent nobottommargin clearfix">
+				<div class="single-post nobottommargin">
+					<div class="entry clearfix">
+						<div class="entry-title">
+							<h2>Solving the Dual ROF Denoising Model using Projected Gradient Descent</h2>
+						</div>
+						<div class="entry-meta clearfix">
+							<li><i class="icon-calendar3"></i>06 April 2017</li>
+						</div>
+						<div class="entry-image bottommargin">
+							<a href=""><img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/gradient_descent_dual_rof.png" alt="Solving the Dual ROF Denoising Model using Projected Gradient Descent"></a>
+						</div>
+						<div class="entry-content">
+							<p>In this blog post we will continue talking about the Image Denoise problem described in my <a href="https://david.villacis.net/blog/2017/02/01/rof-denoising-dual-formulation/">previous post</a>. In this post we described a dual formulation for the ROF Image Denoise model.</p>
+
+<p>We can see that in this particular case the problem becomes easier to tackle, given that there are no non-differentiable terms. Now we have to find ways to solve this dual problem numerically, with this goal in mind we will propose a first approach using a gradient descent algorithm. If you are unfamiliar with this optimization techniques you can refer to this <a href="https://link.springer.com/book/10.1007%2Fb106451">book</a>, wich provides a comprenhensive foundation.</p>
+
+<p>The main idea behind gradient based methods is to define an iterative scheme for solving an optimization problem in which an objective function decreses its value when its variable changes in the direction of the gradient of such function. In the case of the ROF model we can estimate its value at each iteration</p>
+
+\[ROF(u) = \frac{1}{2}\| u-f \|_2^2 + \lambda \| \mathbb{K}u \|_{2,1}\]
+
+<p>This value can be used to give a bound on the \(l_2\) error \(\frac{1}{2} \|u - u^* \|\). We will be implementing this gap using a the following python function:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">ROF_value</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">clambda</span><span class="p">):</span>
+    <span class="sa">r</span><span class="s">""" Compute the ROF cost functional
+
+    Parameters
+    ----------
+    f : numpy array
+        Noisy input image
+    x : numpy array
+        Primal variable value
+    y : numpy array
+        Dual variable value
+    clambda : float
+        Tickonov regularization parameter
+    """</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">linalg</span><span class="p">.</span><span class="n">norm</span><span class="p">((</span><span class="n">f</span><span class="o">-</span><span class="n">x</span><span class="p">).</span><span class="n">flatten</span><span class="p">())</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)).</span><span class="n">flatten</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">+</span><span class="n">clambda</span><span class="o">*</span><span class="n">b</span>
+</code></pre></div></div>
+
+<p>Recalling a version of the dual formulation presented in the previous post, we know that the dual form of the ROF model is:</p>
+
+\[\min \left\{ \frac{1}{2} \|\mathbb{K}^* p\|_2^2 - \langle \mathbb{K}^* p, f \rangle : \sqrt{p_j^2 + p_{m+j}^2} \le \lambda \; \forall j = 1,\dots,m\right\}\]
+
+<p>If we look closely we can define a simpler form of this optimization problem by implementing a projection operator into the unit \(\mathbb{R}^n\) ball:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">prox_project</span><span class="p">(</span><span class="n">clambda</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="sa">r</span><span class="s">""" Projection to the clambda-ball
+
+    Parameters
+    ----------
+    clambda : float
+        Radius of the ball
+    z : numpy array
+        data to be projected
+
+    """</span>
+    <span class="n">nrm</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">fact</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">clambda</span><span class="p">,</span> <span class="n">nrm</span><span class="p">)</span>
+    <span class="n">fact</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">divide</span><span class="p">(</span><span class="n">fact</span><span class="p">,</span><span class="n">nrm</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">np</span><span class="p">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">fact</span><span class="p">),</span> <span class="n">where</span><span class="o">=</span><span class="n">nrm</span><span class="o">!=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">y</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">z</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">],</span><span class="n">fact</span><span class="p">)</span>
+    <span class="n">y</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">z</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">],</span><span class="n">fact</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">y</span>
+</code></pre></div></div>
+
+<p>leaving the rest of the function differentiable, therefore we can explicity calculate its gradient:</p>
+
+\[\nabla ROF(u) = \mathbb{K}(\mathbb{K}^* p - f)\]
+
+<p>I will be using a python module that I’m developing called Bilevel Imaging Toolbox <a href="https://github.com/dvillacis/BilevelImagingToolbox">(BIToolbox)</a>, it is still in its early stages, but there you can find an implementation for a projected gradient descent algorithm. The relevant part of the code is detailed:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">projectedGD_ROF</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">clambda</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sa">r</span><span class="s">""" 2D Dual ROF solver using Projected Gradient Descent Method
+
+    Parameters
+    ----------
+    image : numpy array
+        The noisy image we are processing
+    clambda : float
+        The non-negative weight in the optimization problem
+    iters : int
+        Number of iterations allowed
+
+    """</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">"2D Dual ROF solver using Projected Gradient Descent method"</span><span class="p">)</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">timeit</span><span class="p">.</span><span class="n">default_timer</span><span class="p">()</span>
+    <span class="n">op</span> <span class="o">=</span> <span class="n">operators</span><span class="p">.</span><span class="n">make_finite_differences_operator</span><span class="p">(</span><span class="n">image</span><span class="p">.</span><span class="n">shape</span><span class="p">,</span><span class="s">'fn'</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">op</span><span class="p">.</span><span class="n">val</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">image</span>
+    <span class="n">vallog</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">iters</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1">#Line search parameter
+</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iters</span><span class="p">):</span>
+        <span class="n">y</span> <span class="o">-=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">op</span><span class="p">.</span><span class="n">val</span><span class="p">(</span><span class="n">op</span><span class="p">.</span><span class="n">conj</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">-</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">operators</span><span class="p">.</span><span class="n">prox_project</span><span class="p">(</span><span class="n">clambda</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">image</span> <span class="o">-</span> <span class="n">op</span><span class="p">.</span><span class="n">conj</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">vallog</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ROF_value</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">op</span><span class="p">.</span><span class="n">val</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="n">clambda</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">"Finished Projected Gradient Descent Dual ROF denoising in %d iterations and %f sec"</span><span class="o">%</span><span class="p">(</span><span class="n">iters</span><span class="p">,</span><span class="n">timeit</span><span class="p">.</span><span class="n">default_timer</span><span class="p">()</span><span class="o">-</span><span class="n">start_time</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">vallog</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In this toolbox there is also a predefined methods for obtaining the discrete gradient matrix <em>nabla</em> andd adding different kind of noise to images. If we pass this predefined functions to this algorithm, we will get the following results:</p>
+
+<p><img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/gradient_descent_dual_rof.png" alt="alt text" title="ROF Denoised Lena" /></p>
+
+<p>And we can take a look to the ROF cost evolution:</p>
+
+<p><img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/ROF_cost_evolution_PGD.png" alt="alt text" title="ROF Cost Evolution" /></p>
+
+<p>Therefore, we can make use of traditional optimization techniques to solve this problem. Although, this method requires the gradient to be Lipschitz continuous, in practice this method doesn’t work for some values of the step size and \(\lambda\). Therefore we will explore other techniques in the next posts. Finally, a couple of words on the descent algorithm itself. In this experiments we are using a fixed step size for the descent step, this type of algorithms are very sensitive to the step length choice. In consequence, if we want to improve the results presented it is important to implement a smarter line search strategy such as <em>Armijo</em> or <em>Wolfe</em>. Furthermore, various acceleration mechanisms take into account the variation of this parameter to accelerate convergence.</p>
+
+						</div>
+						<!-- Tag Cloud
+						============================================= -->
+						<h5>Tag Cloud</h5>
+						<div class="tagcloud clearfix bottommargin">
+							
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">coitoolbox</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">dual</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">fatemi</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">fenchel</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">gradient</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">numpy</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">optimization</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">osher</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">projected</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">python</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">rof</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">rudin</a>
+							
+							<a href="/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/">scipy</a>
+							
+						</div><!-- .tagcloud end -->
+
+						<div class="clear"></div>
+
+						<!-- Post Single - Share
+						============================================= -->
+						<div class="si-share noborder clearfix">
+							<span>Share this Post:</span>
+							<div>
+								<a href="https://facebook.com/sharer.php?u=http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/" class="social-icon si-borderless si-facebook" target="_blank">
+									<i class="icon-facebook"></i>
+									<i class="icon-facebook"></i>
+								</a>
+								<a href="https://twitter.com/intent/tweet?text=Solving the Dual ROF Denoising Model using Projected Gradient Descent&url=http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/&via=&related=" class="social-icon si-borderless si-twitter" target="_blank">
+									<i class="icon-twitter"></i>
+									<i class="icon-twitter"></i>
+								</a>
+								<a href="https://plus.google.com/share?url=http://david.villacis.net/blog/2017/04/06/solving-dual-rof-using-projected-gradient-descent/" class="social-icon si-borderless si-gplus" target="_blank">
+									<i class="icon-gplus"></i>
+									<i class="icon-gplus"></i>
+								</a>
+								<a href="#" class="social-icon si-borderless si-rss">
+									<i class="icon-rss"></i>
+									<i class="icon-rss"></i>
+								</a>
+								<a href="#" class="social-icon si-borderless si-email3">
+									<i class="icon-email3"></i>
+									<i class="icon-email3"></i>
+								</a>
+							</div>
+						</div><!-- Post Single - Share End -->
+					</div><!-- Entry end -->
+
+					<!-- Post Navigation
+					============================================= -->
+					<div class="post-navigation clearfix">
+						
+						<div class="nobottommargin">
+							<a href="/blog/2017/02/01/rof-denoising-dual-formulation/">&lArr; Dual ROF Image Denoising Model Formulation</a>
+						</div>
+						
+						
+						<div class="col_last tright nobottommargin">
+							<a href="/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising/">Solving the ROF Denoising Model using Chambolle-Pock &rArr;</a>
+						</div>
+						
+					</div><!-- .post-navigation end -->
+
+					<div class="line"></div>
+
+					<h4>Related Posts:</h4>
+
+					<div class="related-posts clearfix">
+						<div class="col_half nobottommargin">
+							
+							<div class="mpost clearfix">
+								<div class="entry-image">
+									<a href="/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising/"><img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/chambolle_pock_denoising/cp_playing_cards.png" alt="Solving the ROF Denoising Model using Chambolle-Pock"></a>
+								</div>
+								<div class="entry-c">
+									<div class="entry-title">
+										<h4><a href="/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising/">Solving the ROF Denoising Model using Chambolle-Pock</a></h4>
+									</div>
+									<ul class="entry-meta clearfix">
+										<li><i class="icon-calendar3"></i> 14 Dec 2018</li>
+										<li><a href="/blog/2018/12/14/primal-dual-methods-for-ROF-image-denoising/"><i class="icon-comments"></i> 12</a></li>
+									</ul>
+									<div class="entry-content">We will solve a saddle point formulation of the ROF model using chambolle-pock method</div>
+								</div>
+							</div>
+							
+							<div class="mpost clearfix">
+								<div class="entry-image">
+									<a href="/blog/2017/02/01/rof-denoising-dual-formulation/"><img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/dual_rof_denoise.png" alt="Dual ROF Image Denoising Model Formulation"></a>
+								</div>
+								<div class="entry-c">
+									<div class="entry-title">
+										<h4><a href="/blog/2017/02/01/rof-denoising-dual-formulation/">Dual ROF Image Denoising Model Formulation</a></h4>
+									</div>
+									<ul class="entry-meta clearfix">
+										<li><i class="icon-calendar3"></i> 01 Feb 2017</li>
+										<li><a href="/blog/2017/02/01/rof-denoising-dual-formulation/"><i class="icon-comments"></i> 12</a></li>
+									</ul>
+									<div class="entry-content">We will propose a dual model formulation for the Rudin Osher Fatemi denoising model</div>
+								</div>
+							</div>
+							
+					  </div>
+
+					<!-- <div class="clearfix" id="comments">
+						<h3>Comments</h3>
+						<div id="disqus_thread"></div>
+						<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+
+var disqus_config = function () {
+this.page.url = "http://david.villacis.net";  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = ""; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//image-processing-blog.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+
+
+
+</div>
+
+					</div> -->
+				</div>
+			</div>
+		</div>
+
+
+
+		<!-- .sidebar -->
+		<div class="sidebar nobottommargin col_last clearfix">
+			<div class="sidebar-widgets-wrap">
+				<!-- Twitter Widget -->
+				<div class="widget widget-twitter-feed clearfix">
+					<h4>Twitter Feed</h4>
+					<ul class="iconlist twitter-feed">
+						<div class='jekyll-twitter-plugin'><a class="twitter-timeline" data-width="500" data-tweet-limit="3" href="https://twitter.com/davillacis?ref_src=twsrc%5Etfw">Tweets by davillacis</a>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+						<li></li>
+					</ul>
+					<a href="#" class="btn btn-default btn-sm fright">Follow me on Twitter</a>
+				</div>
+
+				<!-- Historic Widget -->
+				<div class="widget clearfix">
+
+					<div class="tabs nobottommargin clearfix" id="sidebar-tabs">
+
+						<ul class="tab-nav clearfix">
+							<li><a href="#tabs-1">Popular</a></li>
+							<li><a href="#tabs-2">Recent</a></li>
+							<li><a href="#tabs-3"><i class="icon-comments-alt norightmargin"></i></a></li>
+						</ul>
+
+						<div class="tab-container">
+
+							<div class="tab-content clearfix" id="tabs-1">
+								<div id="popular-post-list-sidebar">
+									
+								</div>
+							</div>
+							<div class="tab-content clearfix" id="tabs-2">
+								<div id="recent-post-list-sidebar">
+									
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/chambolle_pock_denoising/cp_playing_cards.png" alt="Solving the ROF Denoising Model using Chambolle-Pock"></a>
+										</div>
+										<div class="entry-c">
+											<div class="entry-title">
+												<h4><a href="#">Solving the ROF Denoising Model using Chambolle-Pock</a></h4>
+											</div>
+											<ul class="entry-meta">
+												<li>14 Dec 2018</li>
+											</ul>
+										</div>
+									</div>
+									
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/gradient_descent_dual_rof.png" alt="Solving the Dual ROF Denoising Model using Projected Gradient Descent"></a>
+										</div>
+										<div class="entry-c">
+											<div class="entry-title">
+												<h4><a href="#">Solving the Dual ROF Denoising Model using Projected Gradient Descent</a></h4>
+											</div>
+											<ul class="entry-meta">
+												<li>06 Apr 2017</li>
+											</ul>
+										</div>
+									</div>
+									
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="https://storage.googleapis.com/pagina-personal.appspot.com/img_blog/dual_rof_denoising/dual_rof_denoise.png" alt="Dual ROF Image Denoising Model Formulation"></a>
+										</div>
+										<div class="entry-c">
+											<div class="entry-title">
+												<h4><a href="#">Dual ROF Image Denoising Model Formulation</a></h4>
+											</div>
+											<ul class="entry-meta">
+												<li>01 Feb 2017</li>
+											</ul>
+										</div>
+									</div>
+									
+								</div>
+							</div>
+							<div class="tab-content clearfix" id="tabs-3">
+								<div id="recent-post-list-sidebar">
+
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="/images/icons/avatar.jpg" alt=""></a>
+										</div>
+										<div class="entry-c">
+											<strong>John Doe:</strong> Veritatis recusandae sunt repellat distinctio...
+										</div>
+									</div>
+
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="/images/icons/avatar.jpg" alt=""></a>
+										</div>
+										<div class="entry-c">
+											<strong>Mary Jane:</strong> Possimus libero, earum officia architecto maiores....
+										</div>
+									</div>
+
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="/images/icons/avatar.jpg" alt=""></a>
+										</div>
+										<div class="entry-c">
+											<strong>Site Admin:</strong> Deleniti magni labore laboriosam odio...
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Portfolio Widget -->
+				<div class="widget clearfix">
+
+					<h4>Latest Projects</h4>
+					<div id="oc-portfolio-sidebar" class="owl-carousel carousel-widget" data-items="1" data-margin="10" data-loop="true" data-nav="false" data-autoplay="5000">
+						
+						
+						<div class="oc-item">
+							<div class="iportfolio">
+								<div class="portfolio-image">
+									<a href="#">
+										<img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_research/img_projects/obj_det.png" alt="SVM for Object Detection">
+									</a>
+								</div>
+								<div class="portfolio-desc center nobottompadding">
+									<h3><a href="/research/projects/">SVM for Object Detection</a></h3>
+									<!-- <span><a href="#">Graphics</a>, <a href="#">UI Elements</a></span> -->
+								</div>
+							</div>
+						</div>
+						
+						<div class="oc-item">
+							<div class="iportfolio">
+								<div class="portfolio-image">
+									<a href="#">
+										<img src="https://storage.googleapis.com/pagina-personal.appspot.com/img_research/img_projects/esdegue.png" alt="ESDEGUE TACTICAL TRAINING SYSTEM">
+									</a>
+								</div>
+								<div class="portfolio-desc center nobottompadding">
+									<h3><a href="/research/projects/">ESDEGUE TACTICAL TRAINING SYSTEM</a></h3>
+									<!-- <span><a href="#">Graphics</a>, <a href="#">UI Elements</a></span> -->
+								</div>
+							</div>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+</section>
+
+
+				<!-- Footer
+============================================= -->
+<footer id="footer" class="dark">
+
+	<!-- Copyrights
+	============================================= -->
+	<div id="copyrights">
+
+		<div class="container clearfix">
+
+			<div class="col_half">
+				<img src="/images/logo_small2.png" alt="Footer Logo" class="footer-logo">
+
+				Copyrights &copy; 2017 All Rights Reserved by Guaytambosoft Inc.
+
+			</div>
+
+			<div class="col_half col_last tright">
+				<div class="copyrights-menu copyright-links fright clearfix">
+					<a href="/">Home</a>/<a href="/bio">Bio</a>/<a href="/research">Research</a>/<a href="/code">Code</a>/<a href="/teaching">Teaching</a>/<a href="/blog">Blog</a>/<a href="/contact">Contact</a>
+				</div>
+				<div class="fright clearfix">
+					<a href="https://www.facebook.com/dvillacisproano" class="social-icon si-small si-borderless nobottommargin si-facebook">
+						<i class="icon-facebook"></i>
+						<i class="icon-facebook"></i>
+					</a>
+
+					<a href="https://twitter.com/davillacis" class="social-icon si-small si-borderless nobottommargin si-twitter">
+						<i class="icon-twitter"></i>
+						<i class="icon-twitter"></i>
+					</a>
+
+					<a href="https://plus.google.com/101804704377950549504" class="social-icon si-small si-borderless nobottommargin si-gplus">
+						<i class="icon-gplus"></i>
+						<i class="icon-gplus"></i>
+					</a>
+
+					<a href="https://www.instagram.com/davillacis" class="social-icon si-small si-borderless nobottommargin si-instagram">
+						<i class="icon-instagram"></i>
+						<i class="icon-instagram"></i>
+					</a>
+
+					<a href="https://github.com/dvillacis" class="social-icon si-small si-borderless nobottommargin si-github">
+						<i class="icon-github"></i>
+						<i class="icon-github"></i>
+					</a>
+
+					<a href="https://www.linkedin.com/in/davidvillacis" class="social-icon si-small si-borderless nobottommargin si-linkedin">
+						<i class="icon-linkedin"></i>
+						<i class="icon-linkedin"></i>
+					</a>
+				</div>
+			</div>
+
+		</div>
+
+	</div><!-- #copyrights end -->
+
+</footer><!-- #footer end -->
+
+
+			</div>
+
+		<!-- Go To Top
+			============================================= -->
+			<div id="gotoTop" class="icon-angle-up"></div>
+
+
+		<!-- External JavaScripts
+============================================= -->
+<script type="text/javascript" src="/js/jquery.js"></script>
+<script type="text/javascript" src="/js/plugins.js"></script>
+<script type="text/javascript" src="/js/typed.min.js"></script>
+
+<!-- Google Maps
+============================================= -->
+<script type="text/javascript" src="https://maps.google.com/maps/api/js?key=AIzaSyACeeu1jEL45xNnt71iAsWqhZrUUg2lBxs"></script>
+<script type="text/javascript" src="/js/jquery.gmap.js"></script>
+
+<!-- Search
+============================================= -->
+<script type="text/javascript" src="/js/super-search.js"></script>
+
+<!-- Disqus
+============================================= -->
+<script id="dsq-count-scr" src="//image-processing-blog.disqus.com/count.js" async></script>
+
+<!-- Footer Scripts
+============================================= -->
+<script type="text/javascript" src="/js/functions.js"></script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.10.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+	</body>
+</html>

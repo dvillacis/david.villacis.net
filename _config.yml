@@ -4,6 +4,7 @@ markdown: kramdown
 permalink: /blog/:year/:month/:day/:title/
 comments: disqus
 future: true
+destination: docs
 
 collections:
   teaching:
@@ -29,6 +30,7 @@ collections:
 
 kramdown:
   input: GFM
+  math_engine: mathjax
   syntax_highlighter: rouge
 
 plugins:
