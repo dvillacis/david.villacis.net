@@ -1,0 +1,36 @@
+---
+layout: research
+title: Publications
+active: research
+sub_active: publications
+---
+
+<section id="content">
+	<div class="content-wrap">
+		<div class="container clearfix">
+      <div id="posts" class="small-thumbs">
+				{% assign articles = site.publications | sort: 'date' | reverse %}
+				{% for article in articles %}
+        <div class="entry clearfix">
+					<div class="entry-image">
+						<img class="image_fade" src="{{article.img_url}}" alt="{{article.title}}">
+					</div>
+					<div class="entry-c">
+						<div class="entry-title">
+							<h2><a href="{{article.src_url}}">{{article.title}}</a></h2>
+						</div>
+						<ul class="entry-meta clearfix">
+							<li><i class="icon-calendar3"></i>{{article.date | date_to_long_string}}</li>
+							<li><a><i class="icon-book"></i> {{article.journal}}</a></li>
+						</ul>
+						<div class="entry-content">
+							<p align="justify">{{article.abstract}}</p>
+							<a href="{{article.src_url}}"class="more-link">Read More</a>
+						</div>
+					</div>
+				</div>
+				{% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,48 @@
+---
+layout: default
+title: "Photo Blog"
+active: photo_blog
+---
+<section id="content">
+  <div class="content-wrap" style="padding: 1px 0 0 0;">
+    <!-- <div id="portfolio" class="portfolio grid-container portfolio-nomargin portfolio-full portfolio-masonry mixed-masonry clearfix"> -->
+    <div id="portfolio" class="portfolio grid-container portfolio-3 portfolio-masonry portfolio-nomargin portfolio-full clearfix" data-layout="fitRows">
+      {% for photo in site.photo_posts %}
+      <article class="col-md-4 portfolio-item pf-media pf-icons">
+				<div class="portfolio-image">
+					<a href="{{photo.img_url}}">
+						<img src="{{photo.img_url}}" alt="{{photo.title}}">
+					</a>
+					<div class="portfolio-overlay">
+						<div class="portfolio-desc">
+							<h3><a href="portfolio-single.html">{{photo.title}}</a></h3>
+							<span><a href="#">{{photo.city}}</a> - <a href="#">{{photo.country}}</a></span>
+						</div>
+						<a href="{{photo.img_url}}" class="left-icon" data-lightbox="image"><i class="icon-line-plus"></i></a>
+					</div>
+
+				</div>
+			</article>
+
+      <!-- <article class="portfolio-item {{photo.tags}} {{photo.class}}">
+        <div class="portfolio-image">
+					<a href="portfolio-single.html">
+						<img src="{{photo.img_url}}" alt="{{photo.title}}">
+					</a>
+					<div class="portfolio-overlay">
+						<div class="portfolio-desc">
+							<h3><a href="portfolio-single.html">{{photo.title}}</a></h3>
+							<span><a href="#">{{photo.city}}</a> - <a href="#">{{photo.country}}</a></span>
+						</div>
+						<a href="{{photo.url}}" class="left-icon" data-lightbox="image"><i class="icon-line-plus"></i></a>
+						<a href="portfolio-single.html" class="right-icon"><i class="icon-line-ellipsis"></i></a>
+					</div>
+				</div>
+			</article> -->
+      {% endfor %}
+    </div>
+
+
+    <!-- </div> -->
+  </div>
+</section>

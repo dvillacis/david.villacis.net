@@ -1,0 +1,37 @@
+---
+layout: research
+title: Talks
+active: research
+sub_active: talks
+---
+<section id="content">
+	<div class="content-wrap">
+		<div class="container clearfix">
+      <div id="posts" class="small-thumbs">
+				{% assign talks = site.talks | sort: 'date' | reverse%}
+				{% for talk in talks %}
+        <div class="entry clearfix">
+					<div class="entry-image">
+						<!-- <a href="{{talk.url}}" data-lightbox="image"><img class="image_fade" src="{{talk.img_url}}" alt="{{talk.title}}"></a> -->
+						<img class="image_fade" src="{{talk.img_url}}" alt="{{talk.title}}">
+					</div>
+					<div class="entry-c">
+						<div class="entry-title">
+							<h2>{{talk.title}}</h2>
+						</div>
+						<ul class="entry-meta clearfix">
+							<li><i class="icon-calendar3"></i>{{talk.date  | date_to_long_string}}</li>
+							<li><i class="icon-location"></i>{{talk.city}} - {{talk.country}}</li>
+							<li><a><i class="icon-screen"></i> {{talk.conference}}</a></li>
+						</ul>
+						<div class="entry-content">
+							<p align="justify">{{talk.description}}</p>
+							<!-- <a href="blog-single.html"class="more-link">Read More</a> -->
+						</div>
+					</div>
+				</div>
+				{% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

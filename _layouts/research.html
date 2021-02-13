@@ -1,0 +1,65 @@
+---
+layout: default
+active: research
+---
+<!-- Page Sub Menu
+============================================= -->
+<div id="page-menu" class="no-sticky" >
+
+	<div id="page-menu-wrap" style="background-color:#444;">
+
+		<div class="container clearfix">
+
+			<!-- <div class="menu-title">Portfolio <span>Filter</span></div> -->
+			<nav>
+				<ul class="custom-filter" style="background-color:#444;">
+					{% if page.sub_active == "talks" %}
+					<li class="current"><a href="/research/talks">Talks</a></li>
+					{% else %}
+					<li><a href="/research/talks">Talks</a></li>
+					{% endif %}
+          {% if page.sub_active == "projects" %}
+					<li class="current"><a href="/research/projects"><div>Projects</div></a></li>
+					{% else %}
+					<li><a href="/research/projects"><div>Projects</div></a></li>
+					{% endif %}
+          {% if page.sub_active == "publications" %}
+					<li class="current"><a href="/research/publications"><div>Publications</div></a></li>
+					{% else %}
+					<li><a href="/research/publications"><div>Publications</div></a></li>
+					{% endif %}
+          {% if page.sub_active == "preprints" %}
+					<li class="current"><a href="/research/preprints"><div>Preprints</div></a></li>
+					{% else %}
+					<li><a href="/research/preprints"><div>Preprints</div></a></li>
+					{% endif %}
+					<li><a href="https://scholar.google.com.ec/citations?user=_f2JFc8AAAAJ&hl=en" target="_blank"><div>Google Scholar</div></a></li>
+				</ul>
+			</nav>
+
+		<div id="page-submenu-trigger"><i class="icon-reorder"></i></div>
+
+		</div>
+
+	</div>
+
+</div><!-- #page-menu end -->
+
+<!-- <div id="page-menu" style="background-color:#444;">
+  <div class="page-menu-wrap">
+    <div class="container clearfix">
+      <nav>
+        <ul>
+          <li><a href="/research/talks"><div>Talks</div></a></li>
+          <li><a href="/research/projects"><div>Projects</div></a></li>
+          <li><a href="/research/publications"><div>Publications</div></a></li>
+          <li><a href="/research/preprints"><div>Preprints</div></a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div> -->
+<div class="clear"></div>
+<div>
+  {{content}}
+</div>

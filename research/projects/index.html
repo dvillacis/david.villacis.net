@@ -1,0 +1,38 @@
+---
+layout: research
+title: Projects
+active: research
+sub_active: projects
+---
+
+<section id="content">
+	<div class="content-wrap">
+		<div class="container clearfix">
+      <div id="posts" class="small-thumbs">
+				{% assign projects = site.projects | sort: 'end_date' | reverse %}
+				{% for project in projects  %}
+        <div class="entry clearfix">
+					<div class="entry-image">
+						<!-- <a href="{{project.url}}" data-lightbox="image"><img class="image_fade" src="{{project.img_url}}" alt="{{project.title}}"></a> -->
+						<img class="image_fade" src="{{project.img_url}}" alt="{{project.title}}">
+					</div>
+					<div class="entry-c">
+						<div class="entry-title">
+							<!-- <h2><a href="blog-single.html">{{project.title}}</a></h2> -->
+							<h2>{{project.title}}</h2>
+						</div>
+						<ul class="entry-meta clearfix">
+							<li><i class="icon-calendar3"></i>{{project.start_date | date_to_long_string}} - {{project.end_date | date_to_long_string}}</li>
+							<li><a href="#"><i class="icon-user"></i> {{project.institution}}</a></li>
+						</ul>
+						<div class="entry-content">
+							<p align="justify">{{project.description}}</p>
+							<!-- <a href="blog-single.html"class="more-link">Read More</a> -->
+						</div>
+					</div>
+				</div>
+				{% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

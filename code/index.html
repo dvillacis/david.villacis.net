@@ -1,0 +1,28 @@
+---
+layout: default
+title: Open Source Code
+active: code
+---
+<section id="content">
+  <div class="content-wrap">
+    <div class="container clearfix">
+      <div id="portfolio" class="portfolio grid-container portfolio-1 clearfix">
+        {% for repo in site.code_repos %}
+      	<article class="portfolio-item pf-media pf-icons clearfix">
+      		<div class="portfolio-image">
+      			<a href="{{repo.repo_url}}">
+      				<img src="{{repo.img_url}}" alt="{{repo.title}}">
+      			</a>
+      		</div>
+      		<div class="portfolio-desc">
+      			<h3><a href="{{repo.repo_url}}">{{repo.title}}</a></h3>
+      			<span><a>{{repo.languages}}</a></span>
+      			<p>{{repo.description}}</p>
+      			<a href="{{repo.repo_url}}" class="button button-3d noleftmargin">View Repository</a>
+      		</div>
+      	</article>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>

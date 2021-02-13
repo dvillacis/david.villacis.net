@@ -1,0 +1,86 @@
+<!-- Header
+============================================= -->
+<header id="header" class="sticky-style-2">
+
+  <div class="container clearfix">
+
+    <!-- Logo
+    ============================================= -->
+    <div id="logo" class="divcenter">
+      <!-- <a href="/"><div class="divcenter">HOLA</div></a> -->
+      <a href="/" class="standard-logo" data-dark-logo="/images/logo-dark.png"><img class="divcenter" src="/images/logo.png" alt="David Villacis"></a>
+      <a href="/" class="retina-logo" data-dark-logo="/images/logo-dark.png"><img class="divcenter" src="/images/logo.png" alt="David Villacis"></a>
+    </div><!-- #logo end -->
+
+  </div>
+
+  <div id="header-wrap">
+
+    <!-- Primary Navigation
+    ============================================= -->
+    <nav id="primary-menu" class="style-2 center">
+
+      <div class="container clearfix">
+
+        <div id="primary-menu-trigger"><i class="icon-reorder"></i></div>
+
+        <ul>
+          {% if page.active == "home" %}
+            <li class="current"><a href="/"><div>Home</div></a></li>
+          {% else %}
+            <li><a href="/"><div>Home</div></a></li>
+          {% endif %}
+          {% if page.active == "bio" %}
+            <li class="current"><a href="/bio"><div>Bio</div></a></li>
+          {% else %}
+            <li><a href="/bio"><div>Bio</div></a></li>
+          {% endif %}
+          {% if page.active == "research" %}
+            <li class="current"><a href="/research"><div>Research</div></a></li>
+          {% else %}
+            <li><a href="/research"><div>Research</div></a></li>
+          {% endif %}
+          {% if page.active == "code" %}
+            <li class="current"><a href="/code"><div>Code</div></a></li>
+          {% else %}
+            <li><a href="/code"><div>Code</div></a></li>
+          {% endif %}
+          {% if page.active == "teaching" %}
+            <li class="current"><a href="/teaching"><div>Teaching</div></a></li>
+          {% else %}
+            <li><a href="/teaching"><div>Teaching</div></a></li>
+          {% endif %}
+          {% if page.active == "blog" %}
+            <li class="current"><a href="/blog"><div>Blog</div></a></li>
+          {% else %}
+            <li><a href="/blog"><div>Blog</div></a></li>
+          {% endif %}
+          <!-- {% if page.active == "photo_blog" %}
+            <li class="current"><a href="/photo_blog"><div>Photo Blog</div></a></li>
+          {% else %}
+            <li><a href="/photo_blog"><div>Photo Blog</div></a></li>
+          {% endif %} -->
+          {% if page.active == "contact" %}
+            <li class="current"><a href="/contact"><div>Contact</div></a></li>
+          {% else %}
+            <li><a href="/contact"><div>Contact</div></a></li>
+          {% endif %}
+        </ul>
+
+        <!-- Top Search
+        ============================================= -->
+        <div id="top-search">
+          <a href="#" id="top-search-trigger"><i class="icon-search3"></i><i class="icon-line-cross"></i></a>
+          <form>
+            <input type="text" name="q" class="form-control super-search__input" id="js-super-search__input" value="" placeholder="Type &amp; Hit Enter..">
+            <ul class="super-search__results" id="js-super-search__results"></ul>
+          </form>
+        </div><!-- #top-search end -->
+
+      </div>
+
+    </nav><!-- #primary-menu end -->
+
+  </div>
+
+</header><!-- #header end -->

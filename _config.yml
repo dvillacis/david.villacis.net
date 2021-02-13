@@ -1,0 +1,38 @@
+name: David Villacis
+url: http://david.villacis.net
+markdown: kramdown
+permalink: /blog/:year/:month/:day/:title/
+comments: disqus
+future: true
+
+collections:
+  teaching:
+    output: true
+  talks:
+    output: true
+  projects:
+    output: true
+  publications:
+    output: true
+  preprints:
+    output: true
+  education:
+    output: true
+  experience:
+    output: true
+  seminars:
+    output: true
+  photo_posts:
+    output: true
+  code_repos:
+    output: true
+
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-feed
+  - jekyll-twitter-plugin
+  - jekyll-sitemap
+  - jekyll-seo-tag

@@ -1,0 +1,242 @@
+---
+layout: default
+comments: true
+---
+
+<section id="content">
+	<div class="content-wrap">
+    <div class="container clearfix">
+			<div class="postcontent nobottommargin clearfix">
+				<div class="single-post nobottommargin">
+					<div class="entry clearfix">
+						<div class="entry-title">
+							<h2>{{page.title}}</h2>
+						</div>
+						<div class="entry-meta clearfix">
+							<li><i class="icon-calendar3"></i>{{ page.date | date_to_long_string }}</li>
+						</div>
+						<div class="entry-image bottommargin">
+							<a href=""><img src="{{ page.img_url }}" alt="{{ page.title }}"></a>
+						</div>
+						<div class="entry-content">
+							{{content}}
+						</div>
+						<!-- Tag Cloud
+						============================================= -->
+						<h5>Tag Cloud</h5>
+						<div class="tagcloud clearfix bottommargin">
+							{% assign tags = page.tags | sort %}
+							{% for tag in tags %}
+							<a href="{{page.url}}">{{tag}}</a>
+							{% endfor %}
+						</div><!-- .tagcloud end -->
+
+						<div class="clear"></div>
+
+						<!-- Post Single - Share
+						============================================= -->
+						<div class="si-share noborder clearfix">
+							<span>Share this Post:</span>
+							<div>
+								<a href="https://facebook.com/sharer.php?u={{ site.url }}{{ page.url }}" class="social-icon si-borderless si-facebook" target="_blank">
+									<i class="icon-facebook"></i>
+									<i class="icon-facebook"></i>
+								</a>
+								<a href="https://twitter.com/intent/tweet?text={{ page.title }}&url={{ site.url }}{{ page.url }}&via={{ site.twitter_username }}&related={{ site.twitter_username }}" class="social-icon si-borderless si-twitter" target="_blank">
+									<i class="icon-twitter"></i>
+									<i class="icon-twitter"></i>
+								</a>
+								<a href="https://plus.google.com/share?url={{ site.url }}{{ page.url }}" class="social-icon si-borderless si-gplus" target="_blank">
+									<i class="icon-gplus"></i>
+									<i class="icon-gplus"></i>
+								</a>
+								<a href="#" class="social-icon si-borderless si-rss">
+									<i class="icon-rss"></i>
+									<i class="icon-rss"></i>
+								</a>
+								<a href="#" class="social-icon si-borderless si-email3">
+									<i class="icon-email3"></i>
+									<i class="icon-email3"></i>
+								</a>
+							</div>
+						</div><!-- Post Single - Share End -->
+					</div><!-- Entry end -->
+
+					<!-- Post Navigation
+					============================================= -->
+					<div class="post-navigation clearfix">
+						{% if page.previous.url %}
+						<div class="nobottommargin">
+							<a href="{{page.previous.url}}">&lArr; {{page.previous.title}}</a>
+						</div>
+						{% endif %}
+						{% if page.next.url %}
+						<div class="col_last tright nobottommargin">
+							<a href="{{page.next.url}}">{{page.next.title}} &rArr;</a>
+						</div>
+						{% endif %}
+					</div><!-- .post-navigation end -->
+
+					<div class="line"></div>
+
+					<h4>Related Posts:</h4>
+
+					<div class="related-posts clearfix">
+						<div class="col_half nobottommargin">
+							{% for post in site.related_posts limit:2%}
+							<div class="mpost clearfix">
+								<div class="entry-image">
+									<a href="{{post.url}}"><img src="{{post.img_url}}" alt="{{post.title}}"></a>
+								</div>
+								<div class="entry-c">
+									<div class="entry-title">
+										<h4><a href="{{post.url}}">{{post.title}}</a></h4>
+									</div>
+									<ul class="entry-meta clearfix">
+										<li><i class="icon-calendar3"></i> {{ post.date | date_to_string }}</li>
+										<li><a href="{{post.url}}"><i class="icon-comments"></i> 12</a></li>
+									</ul>
+									<div class="entry-content">{{post.short_description}}</div>
+								</div>
+							</div>
+							{% endfor %}
+					  </div>
+
+					<!-- <div class="clearfix" id="comments">
+						<h3>Comments</h3>
+						<div id="disqus_thread"></div>
+						{% include disqus.html%}
+					</div> -->
+				</div>
+			</div>
+		</div>
+
+
+
+		<!-- .sidebar -->
+		<div class="sidebar nobottommargin col_last clearfix">
+			<div class="sidebar-widgets-wrap">
+				<!-- Twitter Widget -->
+				<div class="widget widget-twitter-feed clearfix">
+					<h4>Twitter Feed</h4>
+					<ul class="iconlist twitter-feed">
+						{% twitter https://twitter.com/davillacis maxwidth=500 limit=3 %}
+						<li></li>
+					</ul>
+					<a href="#" class="btn btn-default btn-sm fright">Follow me on Twitter</a>
+				</div>
+
+				<!-- Historic Widget -->
+				<div class="widget clearfix">
+
+					<div class="tabs nobottommargin clearfix" id="sidebar-tabs">
+
+						<ul class="tab-nav clearfix">
+							<li><a href="#tabs-1">Popular</a></li>
+							<li><a href="#tabs-2">Recent</a></li>
+							<li><a href="#tabs-3"><i class="icon-comments-alt norightmargin"></i></a></li>
+						</ul>
+
+						<div class="tab-container">
+
+							<div class="tab-content clearfix" id="tabs-1">
+								<div id="popular-post-list-sidebar">
+									{% for post in site.popular_posts limit:3%}
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="{{post.img_url}}" alt="{{post.title}}"></a>
+										</div>
+										<div class="entry-c">
+											<div class="entry-title">
+												<h4><a href="#">{{post.title}}</a></h4>
+											</div>
+											<ul class="entry-meta">
+												<li><i class="icon-comments-alt"></i> 35 Comments</li>
+											</ul>
+										</div>
+									</div>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="tab-content clearfix" id="tabs-2">
+								<div id="recent-post-list-sidebar">
+									{% for post in site.posts limit:3 %}
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="{{post.img_url}}" alt="{{post.title}}"></a>
+										</div>
+										<div class="entry-c">
+											<div class="entry-title">
+												<h4><a href="#">{{post.title}}</a></h4>
+											</div>
+											<ul class="entry-meta">
+												<li>{{post.date | date_to_string }}</li>
+											</ul>
+										</div>
+									</div>
+									{% endfor %}
+								</div>
+							</div>
+							<div class="tab-content clearfix" id="tabs-3">
+								<div id="recent-post-list-sidebar">
+
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="/images/icons/avatar.jpg" alt=""></a>
+										</div>
+										<div class="entry-c">
+											<strong>John Doe:</strong> Veritatis recusandae sunt repellat distinctio...
+										</div>
+									</div>
+
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="/images/icons/avatar.jpg" alt=""></a>
+										</div>
+										<div class="entry-c">
+											<strong>Mary Jane:</strong> Possimus libero, earum officia architecto maiores....
+										</div>
+									</div>
+
+									<div class="spost clearfix">
+										<div class="entry-image">
+											<a href="#" class="nobg"><img class="img-circle" src="/images/icons/avatar.jpg" alt=""></a>
+										</div>
+										<div class="entry-c">
+											<strong>Site Admin:</strong> Deleniti magni labore laboriosam odio...
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Portfolio Widget -->
+				<div class="widget clearfix">
+
+					<h4>Latest Projects</h4>
+					<div id="oc-portfolio-sidebar" class="owl-carousel carousel-widget" data-items="1" data-margin="10" data-loop="true" data-nav="false" data-autoplay="5000">
+						{% assign projects = site.projects | sort: 'date' | reverse %}
+						{% for project in projects limit:2%}
+						<div class="oc-item">
+							<div class="iportfolio">
+								<div class="portfolio-image">
+									<a href="#">
+										<img src="{{project.img_url}}" alt="{{project.title}}">
+									</a>
+								</div>
+								<div class="portfolio-desc center nobottompadding">
+									<h3><a href="/research/projects/">{{project.title}}</a></h3>
+									<!-- <span><a href="#">Graphics</a>, <a href="#">UI Elements</a></span> -->
+								</div>
+							</div>
+						</div>
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+</section>

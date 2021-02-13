@@ -1,0 +1,18 @@
+<div id="instafeed" class="instagram-photos masonry-thumbs col-5"></div>
+<script type="text/javascript" src="/js/instafeed.min.js"></script>
+<script type="text/javascript">
+
+  var userFeed = new Instafeed({
+    get: 'user',
+    userId: '47434163',
+    clientId: '48b881a5c03944abb3b2c860368836a1',
+    accessToken: '47434163.48b881a.ddf9d34a0f37494da9b007c23fd484bb',
+    resolution: 'standard_resolution',
+    template: '<a href="{{link}}" target="_blank" id="{{id}}"><img src="{{image}}" /><span>{{likes}}{{comments}}</span></a>',
+    sortBy: 'most-recent',
+    limit: 32,
+    links: false
+  });
+  userFeed.run();
+  
+</script>

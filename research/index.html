@@ -1,0 +1,39 @@
+---
+layout: research
+title: Research
+active: research
+---
+
+<section id="content">
+  <div class="section nomargin">
+    <div class="container clearfix">
+
+					<div class="col_one_fourth nobottommargin center" data-animate="bounceIn">
+						<a href="talks">
+						<i class="i-plain i-xlarge divcenter icon-microphone"></i></a>
+						<div class="counter counter-lined"><span data-from="0" data-to="{{site.talks | size}}" data-refresh-interval="50" data-speed="2000"></span></div>
+						<h5>Talks</h5>
+					</div>
+
+					<div class="col_one_fourth nobottommargin center" data-animate="bounceIn" data-delay="200">
+						<a href="projects"><i class="i-plain i-xlarge divcenter nobottommargin icon-bars"></i></a>
+						<div class="counter counter-lined"><span data-from="0" data-to="{{site.projects | size}}" data-refresh-interval="100" data-speed="2500"></span></div>
+						<h5>Projects</h5>
+					</div>
+
+					<div class="col_one_fourth nobottommargin center" data-animate="bounceIn" data-delay="400">
+						<a href="publications"><i class="i-plain i-xlarge divcenter nobottommargin icon-book"></i></a>
+						<div class="counter counter-lined"><span data-from="0" data-to="{{ site.publications | size }}" data-refresh-interval="25" data-speed="3500"></span></div>
+						<h5>Publications</h5>
+					</div>
+
+					<div class="col_one_fourth nobottommargin center col_last" data-animate="bounceIn" data-delay="600">
+						<a href="preprints"><i class="i-plain i-xlarge divcenter nobottommargin icon-note"></i></a>
+						<div class="counter counter-lined"><span data-from="0" data-to="{{site.preprints | size}}" data-refresh-interval="30" data-speed="2700"></span></div>
+						<h5>Preprints</h5>
+					</div>
+
+				</div>
+
+  </div>
+</section>
