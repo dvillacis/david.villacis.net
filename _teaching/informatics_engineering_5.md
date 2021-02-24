@@ -1,12 +1,12 @@
 ---
 layout: teaching_item
-title: "Informatics Engineering 5"
+title: "Informatics 5"
 date: 2017-01-27
 description: An introduction to Artificial Intelligence
 institution: Universidad Internacional del Ecuador
 school: School of Mechatronics
 institution_url: http://www.uide.edu.ec
-img_url: "https://storage.googleapis.com/pagina-personal.appspot.com/img_teaching/ii5.png"
+img_url: "https://miro.medium.com/max/908/1*2s-my83GACoXqzP5uIH9Aw.png"
 active: teaching
 ---
 

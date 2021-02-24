@@ -6,7 +6,7 @@ description: Implementing Fuzzy Logic in Control Systems
 institution: Universidad Internacional del Ecuador
 school: Mechatronical Engineering
 institution_url: http://www.uide.edu.ec
-img_url: "https://storage.googleapis.com/pagina-personal.appspot.com/img_teaching/fuzzy.png"
+img_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Fuzzy_logic_temperature_en.svg/330px-Fuzzy_logic_temperature_en.svg.png"
 active: teaching
 ---
 

@@ -6,7 +6,7 @@ description: Numerical Methods for Unconstrained Optimization
 institution: Escuela Politécnica Nacional
 school: Department of Mathematics
 institution_url: http://www.epn.edu.ec
-img_url: "https://storage.googleapis.com/pagina-personal.appspot.com/img_teaching/optimization_1.png"
+img_url: "http://www.applied-mathematics.net/optimization/Image6.gif"
 active: teaching
 ---
 

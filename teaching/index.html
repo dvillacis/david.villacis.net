@@ -7,12 +7,12 @@ active: teaching
 <section id="content">
   <div class="content-wrap">
     <div class="container clearfix">
-      <div id="posts" class="post-grid grid-container grid-3 clearfix" data-layout="fitRows">
+      <div id="posts" class="row align-items-center container clearfix">
 				{% assign subs = site.teaching | sort: 'date' | reverse%}
 				{% for subject in subs%}
-				<div class="entry clearfix">
-					<div class="entry-image">
-						<a href="{{subject.url}}"><img src="{{subject.img_url}}" alt="{{subject.title}}" height="200"></a>
+				<div class="col-4 entry clearfix">
+					<div class="center entry-image">
+						<a href="{{subject.url}}"><img src="{{subject.img_url}}" alt="{{subject.title}}" style="height:200px;width:200px;"/></a>
 					</div>
 					<div class="entry-title">
 						<h2><a href="{{subject.url}}">{{subject.title}}</a></h2>
@@ -20,9 +20,9 @@ active: teaching
 					<div class="entry-meta clearfix">
 						<li><a href="{{subject.institution_url}}" target="_blank">{{subject.institution}}</a></li>
 					</div>
-					<div class="entry-content">
+					<!-- <div class="entry-content">
 						<p>{{subject.description}}</p>
-					</div>
+					</div> -->
 				</div>
 				{% endfor %}
       </div>

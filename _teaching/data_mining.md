@@ -6,7 +6,7 @@ description: Mathematical methods for large scale data analytics and prediciton
 institution: Escuela Politecnica Nacional
 school: Department of Mathematics
 institution_url: http://www.epn.edu.ec
-img_url: "http://scikit-learn.org/stable/_images/sphx_glr_plot_digits_linkage_thumb.png"
+img_url: "https://miro.medium.com/max/561/0*ff7kw5DRQbs_uixR.jpg"
 active: teaching
 ---
 

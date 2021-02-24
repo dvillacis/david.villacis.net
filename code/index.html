@@ -6,12 +6,12 @@ active: code
 <section id="content">
   <div class="content-wrap">
     <div class="container clearfix">
-      <div id="portfolio" class="portfolio grid-container portfolio-1 clearfix">
+      <div id="portfolio" class="portfolio grid-container portfolio-2 clearfix">
         {% for repo in site.code_repos %}
       	<article class="portfolio-item pf-media pf-icons clearfix">
       		<div class="portfolio-image">
       			<a href="{{repo.repo_url}}">
-      				<img src="{{repo.img_url}}" alt="{{repo.title}}">
+      				<img src="{{repo.img_url}}" alt="{{repo.title}}" style="height:150px;width:400px;">
       			</a>
       		</div>
       		<div class="portfolio-desc">

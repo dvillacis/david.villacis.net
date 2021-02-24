@@ -39,7 +39,7 @@ active: bio
   				<div class="postcontent nobottommargin clearfix">
   					<div class="feature-box fbox-plain">
   						<div class="fbox-icon" data-animate="bounceIn">
-  							<a href="http://jisic.epn.edu.ec/index.php/"><img src="http://jisic.epn.edu.ec/inscripcion/resources/logo.png" alt="JISIC 2017"></a>
+  							<a href="http://jisic.epn.edu.ec/index.php/"><img src="../images/bio/jisic.png" alt="JISIC 2017"></a>
   						</div>
   						<h3>Best Paper Award</h3>
   						<p>VII Jornadas de Informática, Sistemas e Informática JISIC 2017</p>
@@ -53,28 +53,30 @@ active: bio
 				<h2>Skills</h2>
 			</div>
 			<div class="container clearfix">
-				<div class=" nobottommargin clearfix">
+				<div class="row nobottommargin clearfix">
 
-					<div class="col_one_fifth center">
-						<div class="rounded-skill nobottommargin" data-color="#00ACEE" data-size="150" data-percent="95" data-width="2" data-speed="4000">
+					<div class="col">
+						<div class="rounded-skill nobottommargin" data-color="#00ACEE" data-size="100" data-percent="80" data-width="2" data-speed="4000">
+							Julia
+						</div>
+					</div>
+
+					<div class="col">
+						<div class="rounded-skill nobottommargin" data-color="#00ACEE" data-size="100" data-percent="95" data-width="2" data-speed="4000">
 							Python
 						</div>
 					</div>
 
-					<div class="col_one_fifth center">
-						<div class="rounded-skill nobottommargin" data-color="#3B5998" data-size="150" data-percent="90" data-width="3" data-speed="4000">MATLAB</div>
+					<div class="col">
+						<div class="rounded-skill nobottommargin" data-color="#3B5998" data-size="100" data-percent="90" data-width="3" data-speed="4000">MATLAB</div>
 					</div>
 
-					<div class="col_one_fifth center">
-						<div class="rounded-skill nobottommargin" data-color="#3B5998" data-size="150" data-percent="90" data-width="3" data-speed="4000">HTML5</div>
+					<div class="col">
+						<div class="rounded-skill nobottommargin" data-color="#3B5998" data-size="100" data-percent="90" data-width="3" data-speed="4000">HTML5</div>
 					</div>
 
-					<div class="col_one_fifth center">
-						<div class="rounded-skill nobottommargin" data-color="#EA4C89" data-size="150" data-percent="80" data-width="4" data-speed="4000">C/C++</div>
-					</div>
-
-          <div class="col_one_fifth center col_last">
-						<div class="rounded-skill nobottommargin" data-color="#EA4C89" data-size="150" data-percent="60" data-width="4" data-speed="4000">CUDA</div>
+					<div class="col">
+						<div class="rounded-skill nobottommargin" data-color="#EA4C89" data-size="100" data-percent="80" data-width="4" data-speed="4000">C/C++</div>
 					</div>
 
 				</div>
@@ -85,14 +87,14 @@ active: bio
 			<div id="section-features" class="heading-block title-center page-section">
 				<h2>Experience</h2>
 			</div>
-			<div class="container clearfix">
+			<div class=" row container clearfix">
 				{% assign jobs = site.experience | sort: 'end_date' | reverse%}
 				{%for job in jobs %}
 				{% assign loopindex = forloop.index | modulo: 2 %}
 				{% if forloop.last == true or loopindex == 1 %}
-	  		<div class="col_half col_last">
+	  			<div class="col">
 				{% else %}
-				<div class="col_half">
+				<div class="col">
 				{% endif %}
 					<div class="feature-box fbox-plain">
 						<div class="fbox-icon" data-animate="bounceIn">
@@ -110,13 +112,14 @@ active: bio
 			<div id="section-features" class="heading-block title-center page-section">
 				<h2>Seminars</h2>
 			</div>
+			<div class="row">
 			{% assign sems = site.seminars | sort: 'end_date' | reverse%}
 			{%for seminar in sems%}
 			{% assign loopindex = forloop.index | modulo: 2 %}
 			{% if forloop.last == true or loopindex == 1 %}
-  		<div class="col_half col_last">
+  			<div class="col">
 			{% else %}
-			<div class="col_half">
+			<div class="col">
 			{% endif %}
 				<div class="feature-box fbox-plain">
 					<div class="fbox-icon" data-animate="bounceIn">
@@ -128,6 +131,7 @@ active: bio
 				</div>
 			</div>
 			{% endfor %}
+		</div>
 		</div>
   </div>
 </section>

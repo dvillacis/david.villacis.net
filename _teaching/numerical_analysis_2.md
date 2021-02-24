@@ -6,7 +6,7 @@ description: Numerical Methods for Solving Applied Problems
 institution: Escuela Politécnica Nacional
 school: Department of Mathematics
 institution_url: http://www.epn.edu.ec
-img_url: "https://storage.googleapis.com/pagina-personal.appspot.com/img_teaching/an2.png"
+img_url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Derivative.svg/1200px-Derivative.svg.png"
 active: teaching
 ---
 
